@@ -13,7 +13,6 @@ st.set_page_config(
 # --- ESTILO CSS (OTIMIZADO PARA MODO ESCURO / DARK MODE) ---
 st.markdown("""
     <style>
-    /* Ajuste de Margem para Logo não cortar */
     .block-container {
         padding-top: 3rem !important; 
         padding-bottom: 5rem;
@@ -22,7 +21,6 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
-    /* Botão Principal - Laranja Vibrante */
     div.stButton > button {
         background-color: #FF8C00;
         color: white;
@@ -40,7 +38,6 @@ st.markdown("""
         transform: translateY(-2px);
     }
     
-    /* Box de Resultado Principal */
     .result-box {
         background-color: #262730; 
         padding: 20px;
@@ -52,7 +49,6 @@ st.markdown("""
         margin-bottom: 25px;
     }
     
-    /* Box de Economia Anual (Novo) */
     .annual-box {
         background-color: #1E1E1E;
         border: 1px solid #FF8C00;
@@ -63,12 +59,10 @@ st.markdown("""
         margin-bottom: 20px;
     }
     
-    /* Textos Gerais */
     h1 { color: #FF8C00 !important; }
     h3 { color: #FAFAFA !important; }
     p { color: #E0E0E0 !important; }
     
-    /* Estilo do Extrato (Lista) */
     .statement-row {
         display: flex;
         justify-content: space-between;
@@ -80,7 +74,6 @@ st.markdown("""
     .statement-label { color: #E0E0E0; font-weight: 500; }
     .statement-value { font-weight: bold; color: #FFFFFF; }
     
-    /* Etiqueta de Desconto */
     .discount-tag { 
         background-color: #1B5E20; 
         color: #A5D6A7; 
@@ -91,7 +84,16 @@ st.markdown("""
         border: 1px solid #2E7D32;
     }
     
-    /* Container interno do Expander */
+    .highlight-tag {
+        background-color: #FF8C00;
+        color: #FFF;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        margin-left: 5px;
+    }
+    
     .streamlit-expanderContent {
         background-color: #262730;
         color: white;
@@ -147,24 +149,28 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         tarifa_base_locadora = tarifa_equatorial - tarifa_fio_b_nominal
         tarifa_locadora_final = tarifa_base_locadora * (1 - (desconto_pct / 100))
         
+        # Valores para comparação
         valor_bruto_energia_locadora = consumo_para_compensar * tarifa_base_locadora
         valor_locadora = consumo_para_compensar * tarifa_locadora_final
         desconto_em_reais_solee = valor_bruto_energia_locadora - valor_locadora
         
+        # CÁLCULO DA PORCENTAGEM EFETIVA DE DESCONTO (O "33%")
+        # Comparando o que pagaria na Equatorial CHEIA vs o que paga na Solee pela mesma energia
+        custo_energia_se_fosse_equatorial = consumo_para_compensar * tarifa_equatorial
+        if custo_energia_se_fosse_equatorial > 0:
+            pct_desconto_efetivo = ((custo_energia_se_fosse_equatorial - valor_locadora) / custo_energia_se_fosse_equatorial) * 100
+        else:
+            pct_desconto_efetivo = 0
+
         valor_disponibilidade = custo_disponibilidade * tarifa_equatorial
         custo_fio_b_efetivo = consumo_para_compensar * fator_custo_fio_b
         total_fatura_equatorial = valor_disponibilidade + valor_ilum_pub + custo_fio_b_efetivo
 
         custo_total_com_gd = valor_locadora + total_fatura_equatorial
         economia_reais = total_sem_gd - custo_total_com_gd
-        economia_anual = economia_reais * 12  # CÁLCULO ANUAL
+        economia_anual = economia_reais * 12
         economia_pct = (economia_reais / total_sem_gd) * 100 if total_sem_gd > 0 else 0
         
-        # Percentuais
-        total_taxas = total_fatura_equatorial
-        pct_taxas = (total_taxas / custo_total_com_gd) * 100
-        pct_energia = 100 - pct_taxas
-
         # --- AUTO-SCROLL ---
         components.html(
             """
@@ -179,7 +185,7 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         st.write("---")
         st.markdown("<h3 style='text-align: center;'>Resultado da Análise</h3>", unsafe_allow_html=True)
 
-        # 1. CARD MENSAL
+        # CARD MENSAL
         st.markdown(f"""
         <div class="result-box">
             <h4 style="margin:0; color: #BBB; font-weight: normal;">Economia Mensal</h4>
@@ -188,7 +194,7 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         </div>
         """, unsafe_allow_html=True)
 
-        # 2. CARD ANUAL (NOVO)
+        # CARD ANUAL
         st.markdown(f"""
         <div class="annual-box">
             <span style="color: #FF8C00; font-weight: bold; font-size: 14px;">PROJEÇÃO DE 1 ANO</span><br>
@@ -197,23 +203,37 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         </div>
         """, unsafe_allow_html=True)
 
-        # 3. COMPARATIVO
+        # COMPARATIVO
         col_ant, col_dep = st.columns(2)
         col_ant.metric("🔴 Pagaria Hoje", f"R$ {total_sem_gd:.2f}")
         col_dep.metric("🟢 Vai Pagar", f"R$ {custo_total_com_gd:.2f}")
 
-        # 4. DETALHAMENTO
+        # DETALHAMENTO (ATUALIZADO COM O DESCONTO EFETIVO)
         st.write("")
         with st.expander("🔎 Entenda os Valores (Raio-X)", expanded=False):
             
             st.markdown("#### 1. Onde você ganha (Energia)")
+            
+            # Nova linha mostrando o percentual efetivo
             st.markdown(f"""
+            <div class="statement-row">
+                <span class="statement-label">Desconto Nominal (Contrato)</span>
+                <span class="statement-value">{desconto_pct:.1f}%</span>
+            </div>
+            <div class="statement-row">
+                <span class="statement-label">⚡ Desconto Real na Energia <span class="highlight-tag">IMPACTO REAL</span></span>
+                <span class="statement-value" style="color: #FF8C00;">{pct_desconto_efetivo:.1f}%</span>
+            </div>
+            <div style="font-size: 12px; color: #888; margin-bottom: 10px; margin-top: -5px;">
+                *Comparando o preço da Solee vs Equatorial nesta parcela de consumo.
+            </div>
+            
             <div class="statement-row">
                 <span class="statement-label">Preço Normal da Energia</span>
                 <span class="statement-value" style="color: #888; text-decoration: line-through;">R$ {valor_bruto_energia_locadora:.2f}</span>
             </div>
             <div class="statement-row">
-                <span class="statement-label">✅ Seu Desconto Solee ({desconto_pct}%)</span>
+                <span class="statement-label">✅ Economia em Dinheiro</span>
                 <span class="discount-tag">- R$ {desconto_em_reais_solee:.2f}</span>
             </div>
             <div class="statement-row" style="background-color: #333; padding: 5px 10px; border-radius: 5px; margin-top: 5px;">
@@ -239,6 +259,6 @@ if st.button("CALCULAR ECONOMIA 🚀"):
             </div>
             """, unsafe_allow_html=True)
 
-        # --- INFORMAÇÃO FINAL DE RODAPÉ (ATUALIZADA) ---
+        # RODAPÉ
         st.write("")
         st.info(f"ℹ️ Cálculos baseados na Tarifa Equatorial de R$ {tarifa_equatorial:.3f}. Os valores aproximados e condicionados ao tipo de sistema e taxas de disponibilidade e iluminação pública.")
