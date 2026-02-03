@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILO CSS GERAL (FUNDO E CORES) ---
+# --- ESTILO CSS GERAL ---
 st.markdown("""
     <style>
     .block-container {
@@ -168,7 +168,7 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         economia_anual = economia_reais * 12
         economia_pct = (economia_reais / total_sem_gd) * 100 if total_sem_gd > 0 else 0
         
-        # --- AUTO-SCROLL (JavaScript seguro) ---
+        # --- AUTO-SCROLL ---
         components.html(
             """
             <script>
@@ -204,53 +204,52 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         col_ant.metric("🔴 Pagaria Hoje", f"R$ {total_sem_gd:.2f}")
         col_dep.metric("🟢 Vai Pagar", f"R$ {custo_total_com_gd:.2f}")
 
-        # DETALHAMENTO COM HTML SEGURO (INLINE STYLES)
+        # DETALHAMENTO COM CORREÇÃO DE INDENTAÇÃO
         st.write("")
         with st.expander("🔎 Entenda os Valores (Raio-X)", expanded=False):
             
             st.markdown("#### 1. Duelo de Tarifas (Energia)")
             
-            # Caixa Cinza Escuro
-            st.markdown(f"""
-            <div style="background-color: #333; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #444;">
-                <p style="margin:0 0 10px 0; font-size:14px; color:#AAA;">Comparativo do custo da energia ({consumo_para_compensar:.0f} kWh):</p>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #555; padding-bottom: 8px; margin-bottom: 8px;">
-                    <span style="color: #FFF;">🔴 Na Equatorial</span>
-                    <span style="color: #FF5252; font-weight: bold;">R$ {custo_energia_se_fosse_equatorial:.2f}</span>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="color: #FFF;">🟢 Na Solee</span>
-                    <span style="color: #66BB6A; font-weight: bold;">R$ {valor_locadora:.2f}</span>
-                </div>
-            </div>
+            # ATENÇÃO: O HTML abaixo está alinhado à esquerda para evitar erros de renderização
+            html_duelo = f"""
+<div style="background-color: #333; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #444;">
+    <p style="margin:0 0 10px 0; font-size:14px; color:#AAA;">Comparativo do custo da energia ({consumo_para_compensar:.0f} kWh):</p>
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #555; padding-bottom: 8px; margin-bottom: 8px;">
+        <span style="color: #FFF;">🔴 Na Equatorial</span>
+        <span style="color: #FF5252; font-weight: bold;">R$ {custo_energia_se_fosse_equatorial:.2f}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: #FFF;">🟢 Na Solee</span>
+        <span style="color: #66BB6A; font-weight: bold;">R$ {valor_locadora:.2f}</span>
+    </div>
+</div>
+<div style="background-color: #3d3e47; padding: 12px; border-radius: 8px; text-align: center; margin-top: 10px; border: 1px solid #FF8C00;">
+    <span style="color: #FFF; font-size: 14px;">⚡ Desconto Efetivo na Energia: </span>
+    <br>
+    <span style="color: #FF8C00; font-size: 24px; font-weight: bold;">{pct_desconto_efetivo:.1f}%</span>
+</div>
+"""
+            st.markdown(html_duelo, unsafe_allow_html=True)
             
-            <div style="background-color: #3d3e47; padding: 12px; border-radius: 8px; text-align: center; margin-top: 10px; border: 1px solid #FF8C00;">
-                <span style="color: #FFF; font-size: 14px;">⚡ Desconto Efetivo na Energia: </span>
-                <br>
-                <span style="color: #FF8C00; font-size: 24px; font-weight: bold;">{pct_desconto_efetivo:.1f}%</span>
-            </div>
-            """, unsafe_allow_html=True)
-
             st.write("")
             st.markdown("#### 2. O que é Obrigatório (Taxas)")
             
-            # Lista de Taxas
-            st.markdown(f"""
-            <div class="statement-row">
-                <span class="statement-label">Mínimo Equatorial + Fio B</span>
-                <span class="statement-value">R$ {(valor_disponibilidade + custo_fio_b_efetivo):.2f}</span>
-            </div>
-            <div class="statement-row">
-                <span class="statement-label">Iluminação Pública</span>
-                <span class="statement-value">R$ {valor_ilum_pub:.2f}</span>
-            </div>
-            <div class="statement-row" style="background-color: #333; padding: 5px 10px; border-radius: 5px; margin-top: 5px;">
-                <span class="statement-label" style="font-weight:bold; color: #FFF;">= Total Taxas</span>
-                <span class="statement-value" style="color: #EF5350;">R$ {total_fatura_equatorial:.2f}</span>
-            </div>
-            """, unsafe_allow_html=True)
+            # Taxas
+            html_taxas = f"""
+<div class="statement-row">
+    <span class="statement-label">Mínimo Equatorial + Fio B</span>
+    <span class="statement-value">R$ {(valor_disponibilidade + custo_fio_b_efetivo):.2f}</span>
+</div>
+<div class="statement-row">
+    <span class="statement-label">Iluminação Pública</span>
+    <span class="statement-value">R$ {valor_ilum_pub:.2f}</span>
+</div>
+<div class="statement-row" style="background-color: #333; padding: 5px 10px; border-radius: 5px; margin-top: 5px;">
+    <span class="statement-label" style="font-weight:bold; color: #FFF;">= Total Taxas</span>
+    <span class="statement-value" style="color: #EF5350;">R$ {total_fatura_equatorial:.2f}</span>
+</div>
+"""
+            st.markdown(html_taxas, unsafe_allow_html=True)
             
             st.write("")
             st.info(f"""
