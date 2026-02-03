@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILO CSS (ADAPTÁVEL CLARO/ESCURO) ---
+# --- ESTILO CSS ---
 st.markdown("""
     <style>
     /* Ajuste de margens */
@@ -40,10 +40,10 @@ st.markdown("""
         transform: translateY(-2px);
     }
     
-    /* BOX DE RESULTADO (Sempre Escuro para Destaque) */
+    /* BOX DE RESULTADO (Sempre Escuro) */
     .result-box {
-        background-color: #262730; /* Fundo Escuro Fixo */
-        color: white !important; /* Texto Branco Fixo */
+        background-color: #262730;
+        color: white !important;
         padding: 20px;
         border-radius: 15px;
         border: 1px solid #444; 
@@ -55,7 +55,7 @@ st.markdown("""
     
     /* BOX ANUAL (Sempre Escuro) */
     .annual-box {
-        background-color: #1E1E1E; /* Fundo Preto Suave */
+        background-color: #1E1E1E;
         color: white !important;
         border: 1px solid #FF8C00;
         border-radius: 10px;
@@ -65,12 +65,10 @@ st.markdown("""
         margin-bottom: 20px;
     }
     
-    /* TEXTOS ESPECÍFICOS DENTRO DOS CARDS */
-    .result-box h1, .result-box h4, .result-box p {
-        color: white !important;
-    }
+    /* Cores de Texto forçadas dentro dos boxes */
+    .result-box h1, .result-box h4, .result-box p { color: white !important; }
     
-    /* TAGS E DESTAQUES */
+    /* TAGS */
     .discount-tag { 
         background-color: #1B5E20; 
         color: #A5D6A7; 
@@ -80,13 +78,7 @@ st.markdown("""
         font-weight: bold;
         border: 1px solid #2E7D32;
     }
-
-    /* ESTILO DO EXPANDER (Ajusta-se ao tema do usuário) */
-    .streamlit-expanderContent {
-        /* Deixa transparente para herdar o fundo do tema */
-    }
     
-    /* Classe para linhas do extrato */
     .statement-row {
         display: flex;
         justify-content: space-between;
@@ -95,7 +87,6 @@ st.markdown("""
         border-bottom: 1px solid #ddd;
         font-size: 16px;
     }
-    
     </style>
 """, unsafe_allow_html=True)
 
@@ -132,17 +123,15 @@ if st.button("CALCULAR ECONOMIA 🚀"):
     if consumo_medio is None or valor_ilum_pub is None or desconto_pct is None:
         st.error("⚠️ Por favor, preencha todos os campos.")
     else:
-        # --- LÓGICA ---
+        # LÓGICA
         tarifa_equatorial = 1.077
         tarifa_fio_b_nominal = 0.224272
         fator_custo_fio_b = 0.15065 
         custo_disponibilidade = 100 if tipo_ligacao == "Trifásico" else 30
 
-        # Sem GD
         custo_energia_sem_gd = consumo_medio * tarifa_equatorial
         total_sem_gd = custo_energia_sem_gd + valor_ilum_pub
 
-        # Com GD
         consumo_para_compensar = max(0, consumo_medio - custo_disponibilidade)
         
         tarifa_base_locadora = tarifa_equatorial - tarifa_fio_b_nominal
@@ -166,11 +155,24 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         economia_anual = economia_reais * 12
         economia_pct = (economia_reais / total_sem_gd) * 100 if total_sem_gd > 0 else 0
         
-        # --- AUTO-SCROLL ---
+        # --- AUTO-SCROLL (Versão Reforçada) ---
+        # Adiciona delay para garantir que o layout renderizou antes de rolar
         components.html(
             """
             <script>
-                window.parent.document.querySelector('section.main').scrollTo({top: 1000, behavior: 'smooth'});
+                setTimeout(function() {
+                    // Tenta encontrar o container principal do app
+                    var main = window.parent.document.querySelector('.main');
+                    var appView = window.parent.document.querySelector('.stApp');
+                    
+                    if (main) {
+                        main.scrollTo({top: main.scrollHeight, behavior: 'smooth'});
+                    } else if (appView) {
+                        appView.scrollTo({top: appView.scrollHeight, behavior: 'smooth'});
+                    } else {
+                        window.parent.scrollTo({top: window.parent.document.body.scrollHeight, behavior: 'smooth'});
+                    }
+                }, 500); // Espera 500ms
             </script>
             """, 
             height=0, width=0
@@ -180,7 +182,7 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         st.write("---")
         st.markdown("<h3 style='text-align: center; color: var(--text-color);'>Resultado da Análise</h3>", unsafe_allow_html=True)
 
-        # 1. CARD MENSAL (Fundo Escuro Fixo)
+        # 1. CARD MENSAL
         st.markdown(f"""
         <div class="result-box">
             <h4 style="margin:0; color: #EEE; font-weight: normal;">Economia Mensal</h4>
@@ -189,7 +191,7 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         </div>
         """, unsafe_allow_html=True)
 
-        # 2. CARD ANUAL (Fundo Escuro Fixo)
+        # 2. CARD ANUAL
         st.markdown(f"""
         <div class="annual-box">
             <span style="color: #FF8C00; font-weight: bold; font-size: 14px;">PROJEÇÃO DE 1 ANO</span><br>
@@ -198,7 +200,6 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         </div>
         """, unsafe_allow_html=True)
 
-        # 3. COMPARATIVO (Métricas Nativas)
         col_ant, col_dep = st.columns(2)
         col_ant.metric("🔴 Pagaria Hoje", f"R$ {total_sem_gd:.2f}")
         col_dep.metric("🟢 Vai Pagar", f"R$ {custo_total_com_gd:.2f}")
@@ -209,7 +210,6 @@ if st.button("CALCULAR ECONOMIA 🚀"):
             
             st.markdown("#### 1. Duelo de Tarifas (Energia)")
             
-            # Box Escuro Fixo para Comparação
             html_duelo = f"""
 <div style="background-color: #333; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #444;">
     <p style="margin:0 0 10px 0; font-size:14px; color:#AAA;">Comparativo do custo da energia ({consumo_para_compensar:.0f} kWh):</p>
@@ -238,7 +238,6 @@ if st.button("CALCULAR ECONOMIA 🚀"):
             st.write("")
             st.markdown("#### 2. O que é Obrigatório (Taxas)")
             
-            # Lista de Taxas
             html_taxas = f"""
 <div style="border-bottom: 1px solid #ddd; padding: 10px 0; display: flex; justify-content: space-between;">
     <span style="font-weight: 500;">Mínimo Equatorial + Fio B</span>
