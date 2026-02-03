@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import streamlit.components.v1 as components
+import time
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -79,6 +80,7 @@ st.markdown("""
         border: 1px solid #2E7D32;
     }
     
+    /* Extrato */
     .statement-row {
         display: flex;
         justify-content: space-between;
@@ -155,24 +157,22 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         economia_anual = economia_reais * 12
         economia_pct = (economia_reais / total_sem_gd) * 100 if total_sem_gd > 0 else 0
         
-        # --- AUTO-SCROLL (Versão Reforçada) ---
-        # Adiciona delay para garantir que o layout renderizou antes de rolar
+        # --- AUTO-SCROLL (TÉCNICA DE ANCORAGEM) ---
+        # 1. Criamos um DIV invisível com ID específico ANTES do resultado
+        st.markdown('<div id="resultado_final"></div>', unsafe_allow_html=True)
+        
+        # 2. Injetamos JavaScript que procura esse ID e rola até ele
         components.html(
             """
             <script>
+                // Espera um pouco para garantir que o Streamlit desenhou o elemento
                 setTimeout(function() {
-                    // Tenta encontrar o container principal do app
-                    var main = window.parent.document.querySelector('.main');
-                    var appView = window.parent.document.querySelector('.stApp');
-                    
-                    if (main) {
-                        main.scrollTo({top: main.scrollHeight, behavior: 'smooth'});
-                    } else if (appView) {
-                        appView.scrollTo({top: appView.scrollHeight, behavior: 'smooth'});
-                    } else {
-                        window.parent.scrollTo({top: window.parent.document.body.scrollHeight, behavior: 'smooth'});
+                    // Busca o elemento dentro do documento pai (fora do iframe do componente)
+                    var target = window.parent.document.getElementById('resultado_final');
+                    if (target) {
+                        target.scrollIntoView({behavior: 'smooth', block: 'start'});
                     }
-                }, 500); // Espera 500ms
+                }, 300);
             </script>
             """, 
             height=0, width=0
@@ -262,4 +262,4 @@ if st.button("CALCULAR ECONOMIA 🚀"):
 
         # RODAPÉ
         st.write("")
-        st.info(f"ℹ️ Cálculos baseados na Tarifa Equatorial de R$ {tarifa_equatorial:.3f}. Os valores aproximados e condicionados ao tipo de sistema e taxas de disponibilidade e iluminação pública.")
+        st.caption(f"ℹ️ Cálculos baseados na Tarifa Equatorial de R$ {tarifa_equatorial:.3f}. Os valores aproximados e condicionados ao tipo de sistema e taxas de disponibilidade e iluminação pública.")
