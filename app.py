@@ -1,99 +1,122 @@
 import streamlit as st
 import pandas as pd
 
-# --- CONFIGURAÇÃO DA PÁGINA ---
+# --- CONFIGURAÇÃO DA PÁGINA (MOBILE FRIENDLY) ---
 st.set_page_config(
-    page_title="Simulador Solee Energia Solar",
+    page_title="Simulador Solee",
     page_icon="☀️",
-    layout="centered"
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
-# --- ESTILIZAÇÃO CSS (CORES DA EMPRESA) ---
+# --- ESTILO CSS OTIMIZADO PARA CELULAR ---
 st.markdown("""
     <style>
+    /* Remove margens excessivas do topo para celular */
+    .block-container {
+        padding-top: 1.5rem;
+        padding-bottom: 3rem;
+    }
+    
+    /* Esconde menu e rodapé padrão */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
+    /* Botão Grande e Chamativo (Fácil de clicar com o dedo) */
     div.stButton > button {
         background-color: #FF8C00; /* Laranja Solee */
         color: white;
-        font-size: 18px;
+        font-size: 20px;
         font-weight: bold;
-        border-radius: 8px;
+        border-radius: 12px;
         border: none;
-        padding: 12px 24px;
+        padding: 15px 24px;
         width: 100%;
+        box-shadow: 0px 4px 6px rgba(0,0,0,0.1);
         transition: 0.3s;
     }
     div.stButton > button:hover {
         background-color: #e07b00;
-        color: white;
+        transform: translateY(-2px);
     }
     
-    [data-testid="stMetricValue"] {
-        font-size: 24px;
-        color: #2E7D32; /* Verde Economia */
-    }
-
-    h1 {
-        color: #FF8C00;
-    }
+    /* Ajuste de tamanho de fontes para leitura no celular */
+    h1 { font-size: 1.8rem !important; }
+    h3 { font-size: 1.3rem !important; }
+    p, label { font-size: 1rem !important; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- CABEÇALHO E LOGO ---
-col_logo, col_title = st.columns([1, 5])
+# --- CABEÇALHO ---
+# Usamos colunas, mas travamos a largura da imagem para não estourar no celular
+col_logo, col_title = st.columns([1, 4])
 
 with col_logo:
-    # Tenta carregar a imagem 'logo.png' que deve estar no GitHub
     try:
-        st.image("logo.png", use_column_width=True) 
+        # width=100 garante que no celular ela fique pequena e elegante (não gigante)
+        st.image("logo.png", width=100) 
     except:
-        st.write("☀️") # Mostra um sol se não achar a logo
+        st.write("☀️")
 
 with col_title:
-    st.title("Simulador Solee Energia Solar")
-    st.caption("Ferramenta de Vendas - Cálculo de Economia")
+    st.markdown("<h1 style='margin-top: -10px; color: #FF8C00;'>Simulador Solee</h1>", unsafe_allow_html=True)
+    st.caption("Cálculo de Economia Solar")
 
-st.divider()
+st.write("---")
 
-# --- INPUTS (ENTRADA DE DADOS ZERADA) ---
-with st.container():
-    st.subheader("📝 Insira os dados da Fatura")
-    st.write("Preencha os campos abaixo com os dados do cliente:")
-    
-    col_input1, col_input2 = st.columns(2)
-    with col_input1:
-        # value=None ou retirar o value faz começar zerado/vazio
-        consumo_medio = st.number_input("1️⃣ Consumo Médio (kWh)", min_value=0.0, step=10.0, format="%.2f")
-        tipo_ligacao = st.selectbox("3️⃣ Tipo de Ligação", ["Monofásico", "Trifásico"])
+# --- INPUTS (CAMPOS EM BRANCO) ---
+st.markdown("### 📝 Dados da Fatura")
 
-    with col_input2:
-        valor_ilum_pub = st.number_input("2️⃣ Ilum. Pública (R$)", min_value=0.0, step=1.0, format="%.2f")
-        desconto_pct = st.number_input("4️⃣ Desconto Oferecido (%)", min_value=0.0, max_value=100.0, step=1.0, format="%.1f")
+# value=None deixa o campo vazio. placeholder mostra o texto cinza de exemplo.
+consumo_medio = st.number_input(
+    "1️⃣ Consumo Médio (kWh)", 
+    min_value=0.0, 
+    value=None, 
+    placeholder="Ex: 480"
+)
 
-st.write("") # Espaçamento
+valor_ilum_pub = st.number_input(
+    "2️⃣ Ilum. Pública (R$)", 
+    min_value=0.0, 
+    value=None, 
+    placeholder="Ex: 48.00",
+    format="%.2f"
+)
+
+col_tipo, col_desc = st.columns(2)
+with col_tipo:
+    tipo_ligacao = st.selectbox("3️⃣ Ligação", ["Monofásico", "Trifásico"], index=1)
+
+with col_desc:
+    desconto_pct = st.number_input(
+        "4️⃣ Desconto (%)", 
+        min_value=0.0, 
+        max_value=100.0, 
+        value=None, 
+        placeholder="Ex: 15"
+    )
+
+st.write("") # Espaço para o dedo não bater errado
 
 # --- BOTÃO DE CÁLCULO ---
-calcular = st.button("CALCULAR ECONOMIA AGORA 🚀")
+calcular = st.button("CALCULAR AGORA 🚀")
 
 if calcular:
-    # Validação simples para não calcular zerado
-    if consumo_medio <= 0:
-        st.warning("⚠️ Por favor, insira um valor de Consumo Médio (kWh) maior que zero para calcular.")
+    # Validação: Verifica se os campos estão preenchidos (não são None)
+    if consumo_medio is None or valor_ilum_pub is None or desconto_pct is None:
+        st.error("⚠️ Por favor, preencha todos os campos numéricos para calcular.")
     else:
-        # --- PARÂMETROS E LÓGICA ---
+        # --- LÓGICA DE CÁLCULO ---
         tarifa_equatorial = 1.077
         tarifa_fio_b_nominal = 0.224272
         fator_custo_fio_b = 0.15065 
-        
         custo_disponibilidade = 100 if tipo_ligacao == "Trifásico" else 30
 
-        # 1. Cenário SEM GD
+        # Cenário SEM GD
         custo_energia_sem_gd = consumo_medio * tarifa_equatorial
         total_sem_gd = custo_energia_sem_gd + valor_ilum_pub
 
-        # 2. Cenário COM GD
+        # Cenário COM GD
         consumo_para_compensar = max(0, consumo_medio - custo_disponibilidade)
         
         # Locadora
@@ -101,7 +124,7 @@ if calcular:
         tarifa_locadora_final = tarifa_base_locadora * (1 - (desconto_pct / 100))
         valor_locadora = consumo_para_compensar * tarifa_locadora_final
 
-        # Equatorial (Novo)
+        # Equatorial
         valor_disponibilidade = custo_disponibilidade * tarifa_equatorial
         custo_fio_b_efetivo = consumo_para_compensar * fator_custo_fio_b
         total_fatura_equatorial = valor_disponibilidade + valor_ilum_pub + custo_fio_b_efetivo
@@ -111,37 +134,37 @@ if calcular:
         economia_reais = total_sem_gd - custo_total_com_gd
         economia_pct = (economia_reais / total_sem_gd) * 100 if total_sem_gd > 0 else 0
 
-        # --- EXIBIÇÃO DOS RESULTADOS ---
-        st.divider()
-        st.markdown("### 📊 Resultado da Simulação")
+        # --- RESULTADOS (MOBILE FRIENDLY) ---
+        st.write("---")
+        st.markdown("<h3 style='text-align: center; color: #2E7D32;'>🎉 Economia Encontrada!</h3>", unsafe_allow_html=True)
 
-        # Métricas Principais
-        col_res1, col_res2, col_res3 = st.columns(3)
-        col_res1.metric("Fatura Atual (Sem Solar)", f"R$ {total_sem_gd:.2f}")
-        col_res2.metric("Fatura SOLEE (Estimada)", f"R$ {custo_total_com_gd:.2f}", delta=f"- {economia_pct:.1f}% de Redução", delta_color="inverse")
-        col_res3.metric("💰 Economia Mensal", f"R$ {economia_reais:.2f}")
+        # Container Verde para destacar o resultado final
+        st.markdown(f"""
+        <div style="background-color: #e8f5e9; padding: 15px; border-radius: 10px; border: 1px solid #2E7D32; text-align: center;">
+            <p style="margin:0; font-size: 14px; color: #555;">O cliente vai economizar:</p>
+            <h2 style="margin:0; color: #2E7D32; font-size: 32px;">R$ {economia_reais:.2f}</h2>
+            <p style="margin:0; font-weight: bold; color: #2E7D32;">({economia_pct:.1f}% a menos)</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-        # Gráfico Comparativo
         st.write("")
-        st.caption("Comparativo visual de custos:")
-        dados_grafico = pd.DataFrame({
-            "Situação": ["Pagando Equatorial", "Pagando Solee"],
-            "Valor Total (R$)": [total_sem_gd, custo_total_com_gd]
-        })
-        st.bar_chart(dados_grafico.set_index("Situação"), color="#FF8C00")
 
-        # Detalhamento
-        with st.expander("🔎 Ver Detalhes da Nova Fatura (Composição)"):
-            st.info(f"""
-            **Como fica o pagamento:**
-            
-            1. **Boleto Locadora (Solee):** R$ {valor_locadora:.2f}
-               *(Referente a {consumo_para_compensar:.0f} kWh compensados com {desconto_pct}% de desconto)*
-            
-            2. **Fatura Equatorial:** R$ {total_fatura_equatorial:.2f}
-               *(Referente ao custo de disponibilidade de {custo_disponibilidade}kWh, iluminação pública e taxas de uso da rede)*
-               
-            **Total Geral:** R$ {custo_total_com_gd:.2f}
-            """)
+        # Detalhamento Simplificado (Comparativo Lado a Lado)
+        col_antes, col_depois = st.columns(2)
+        with col_antes:
+            st.metric("🔴 Paga Hoje", f"R$ {total_sem_gd:.0f}")
+        with col_depois:
+            st.metric("🟢 Vai Pagar", f"R$ {custo_total_com_gd:.0f}")
+
+        # Gráfico (Removemos detalhes desnecessários para caber na tela)
+        chart_data = pd.DataFrame({
+            "Cenário": ["Hoje", "Com Solee"],
+            "Valor": [total_sem_gd, custo_total_com_gd]
+        })
+        st.bar_chart(chart_data.set_index("Cenário"), color="#FF8C00")
         
-        st.success("✅ Simulação pronta para apresentar ao cliente!")
+        # Botão Expander para quem quer ver os centavos (não polui a tela principal)
+        with st.expander("Ver composição exata dos valores"):
+            st.write(f"**Boleto Solee:** R$ {valor_locadora:.2f}")
+            st.write(f"**Conta Equatorial:** R$ {total_fatura_equatorial:.2f}")
+            st.caption(f"Base: Consumo {consumo_medio}kWh | Disp. {custo_disponibilidade}kWh")
