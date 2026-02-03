@@ -261,9 +261,9 @@ if st.button("CALCULAR ECONOMIA 🚀"):
     <span style="font-weight: bold; color: #EF5350;">R$ {total_fatura_equatorial:.2f}</span>
 </div>
 """
-            st.markdown(html_taxas, unsafe_allow_html=True)
+           st.markdown(html_taxas, unsafe_allow_html=True)
             
-         st.write("")
+            st.write("")
             st.info(f"""
             **💡 Como esse desconto é possível?**
             A Solee retira custos (como o Fio B) que a Equatorial cobraria cheios, e ainda aplica o desconto de contrato ({desconto_pct}%) sobre a tarifa reduzida.
