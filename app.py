@@ -10,10 +10,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILO CSS (CORRIGIDO E OTIMIZADO) ---
+# --- ESTILO CSS GERAL (FUNDO E CORES) ---
 st.markdown("""
     <style>
-    /* Layout Mobile */
     .block-container {
         padding-top: 3rem !important; 
         padding-bottom: 5rem;
@@ -22,6 +21,7 @@ st.markdown("""
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
+    /* Botão */
     div.stButton > button {
         background-color: #FF8C00;
         color: white;
@@ -39,6 +39,7 @@ st.markdown("""
         transform: translateY(-2px);
     }
     
+    /* Boxes de Resultado */
     .result-box {
         background-color: #262730; 
         padding: 20px;
@@ -60,11 +61,12 @@ st.markdown("""
         margin-bottom: 20px;
     }
     
+    /* Tipografia */
     h1 { color: #FF8C00 !important; }
     h3 { color: #FAFAFA !important; }
     p { color: #E0E0E0 !important; }
     
-    /* Estilo Geral das Linhas do Extrato */
+    /* Extrato */
     .statement-row {
         display: flex;
         justify-content: space-between;
@@ -85,32 +87,8 @@ st.markdown("""
         font-weight: bold;
         border: 1px solid #2E7D32;
     }
-    
-    /* CORREÇÃO DO BOX DE COMPARAÇÃO */
-    .duelo-box {
-        background-color: #333; 
-        padding: 15px; 
-        border-radius: 10px; 
-        margin-bottom: 15px;
-        border: 1px solid #444;
-    }
-    
-    .duelo-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-    }
-    
-    .impacto-box {
-        background-color: #3d3e47;
-        padding: 10px;
-        border-radius: 8px;
-        text-align: center;
-        margin-top: 10px;
-        border: 1px solid #FF8C00;
-    }
-    
+
+    /* Expander */
     .streamlit-expanderContent {
         background-color: #262730;
         color: white;
@@ -151,45 +129,46 @@ if st.button("CALCULAR ECONOMIA 🚀"):
     if consumo_medio is None or valor_ilum_pub is None or desconto_pct is None:
         st.error("⚠️ Por favor, preencha todos os campos.")
     else:
-        # 1. PARÂMETROS
+        # --- LÓGICA DE CÁLCULO ---
         tarifa_equatorial = 1.077
         tarifa_fio_b_nominal = 0.224272
         fator_custo_fio_b = 0.15065 
         custo_disponibilidade = 100 if tipo_ligacao == "Trifásico" else 30
 
-        # 2. CÁLCULO
+        # Sem GD
         custo_energia_sem_gd = consumo_medio * tarifa_equatorial
         total_sem_gd = custo_energia_sem_gd + valor_ilum_pub
 
+        # Com GD
         consumo_para_compensar = max(0, consumo_medio - custo_disponibilidade)
         
+        # Locadora
         tarifa_base_locadora = tarifa_equatorial - tarifa_fio_b_nominal
         tarifa_locadora_final = tarifa_base_locadora * (1 - (desconto_pct / 100))
         
-        # Valores Comparativos
+        # Variáveis Comparativas
         custo_energia_se_fosse_equatorial = consumo_para_compensar * tarifa_equatorial
         valor_locadora = consumo_para_compensar * tarifa_locadora_final
-        
         desconto_em_reais_solee = custo_energia_se_fosse_equatorial - valor_locadora
         
-        # Porcentagem de Impacto Real
+        # Percentual Efetivo
         if custo_energia_se_fosse_equatorial > 0:
             pct_desconto_efetivo = ((custo_energia_se_fosse_equatorial - valor_locadora) / custo_energia_se_fosse_equatorial) * 100
         else:
             pct_desconto_efetivo = 0
 
-        # Taxas Equatorial
+        # Equatorial
         valor_disponibilidade = custo_disponibilidade * tarifa_equatorial
         custo_fio_b_efetivo = consumo_para_compensar * fator_custo_fio_b
         total_fatura_equatorial = valor_disponibilidade + valor_ilum_pub + custo_fio_b_efetivo
 
-        # Totais Finais
+        # Totais
         custo_total_com_gd = valor_locadora + total_fatura_equatorial
         economia_reais = total_sem_gd - custo_total_com_gd
         economia_anual = economia_reais * 12
         economia_pct = (economia_reais / total_sem_gd) * 100 if total_sem_gd > 0 else 0
         
-        # --- AUTO-SCROLL ---
+        # --- AUTO-SCROLL (JavaScript seguro) ---
         components.html(
             """
             <script>
@@ -199,7 +178,7 @@ if st.button("CALCULAR ECONOMIA 🚀"):
             height=0, width=0
         )
 
-        # --- RESULTADOS ---
+        # --- EXIBIÇÃO ---
         st.write("---")
         st.markdown("<h3 style='text-align: center;'>Resultado da Análise</h3>", unsafe_allow_html=True)
 
@@ -225,45 +204,39 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         col_ant.metric("🔴 Pagaria Hoje", f"R$ {total_sem_gd:.2f}")
         col_dep.metric("🟢 Vai Pagar", f"R$ {custo_total_com_gd:.2f}")
 
-        # DETALHAMENTO (LAYOUT CORRIGIDO)
+        # DETALHAMENTO COM HTML SEGURO (INLINE STYLES)
         st.write("")
         with st.expander("🔎 Entenda os Valores (Raio-X)", expanded=False):
             
             st.markdown("#### 1. Duelo de Tarifas (Energia)")
             
-            # Box de Comparação Reestruturado
+            # Caixa Cinza Escuro
             st.markdown(f"""
-            <div class="duelo-box">
+            <div style="background-color: #333; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #444;">
                 <p style="margin:0 0 10px 0; font-size:14px; color:#AAA;">Comparativo do custo da energia ({consumo_para_compensar:.0f} kWh):</p>
                 
-                <div class="duelo-row" style="border-bottom: 1px solid #555; padding-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #555; padding-bottom: 8px; margin-bottom: 8px;">
                     <span style="color: #FFF;">🔴 Na Equatorial</span>
                     <span style="color: #FF5252; font-weight: bold;">R$ {custo_energia_se_fosse_equatorial:.2f}</span>
                 </div>
                 
-                <div class="duelo-row" style="padding-top: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="color: #FFF;">🟢 Na Solee</span>
                     <span style="color: #66BB6A; font-weight: bold;">R$ {valor_locadora:.2f}</span>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
-
-            # Box de Impacto separado para não quebrar layout
-            st.markdown(f"""
-            <div class="impacto-box">
+            
+            <div style="background-color: #3d3e47; padding: 12px; border-radius: 8px; text-align: center; margin-top: 10px; border: 1px solid #FF8C00;">
                 <span style="color: #FFF; font-size: 14px;">⚡ Desconto Efetivo na Energia: </span>
                 <br>
-                <span style="color: #FF8C00; font-size: 22px; font-weight: bold;">{pct_desconto_efetivo:.1f}%</span>
+                <span style="color: #FF8C00; font-size: 24px; font-weight: bold;">{pct_desconto_efetivo:.1f}%</span>
             </div>
             """, unsafe_allow_html=True)
 
-            st.info(f"""
-            **💡 Explicação para o Cliente:**
-            Embora o desconto no contrato seja de {desconto_pct}%, a **economia real** na compra da energia é muito maior ({pct_desconto_efetivo:.0f}%) porque a Solee retira custos (como o Fio B) que a Equatorial cobraria cheios.
-            """)
-
             st.write("")
             st.markdown("#### 2. O que é Obrigatório (Taxas)")
+            
+            # Lista de Taxas
             st.markdown(f"""
             <div class="statement-row">
                 <span class="statement-label">Mínimo Equatorial + Fio B</span>
@@ -278,6 +251,12 @@ if st.button("CALCULAR ECONOMIA 🚀"):
                 <span class="statement-value" style="color: #EF5350;">R$ {total_fatura_equatorial:.2f}</span>
             </div>
             """, unsafe_allow_html=True)
+            
+            st.write("")
+            st.info(f"""
+            **💡 Como esse desconto é possível?**
+            A Solee retira custos (como o Fio B) que a Equatorial cobraria cheios, e ainda aplica o desconto de contrato ({desconto_pct}%) sobre a tarifa reduzida.
+            """)
 
         # RODAPÉ
         st.write("")
