@@ -10,9 +10,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILO CSS (OTIMIZADO PARA MODO ESCURO) ---
+# --- ESTILO CSS (CORRIGIDO E OTIMIZADO) ---
 st.markdown("""
     <style>
+    /* Layout Mobile */
     .block-container {
         padding-top: 3rem !important; 
         padding-bottom: 5rem;
@@ -63,6 +64,7 @@ st.markdown("""
     h3 { color: #FAFAFA !important; }
     p { color: #E0E0E0 !important; }
     
+    /* Estilo Geral das Linhas do Extrato */
     .statement-row {
         display: flex;
         justify-content: space-between;
@@ -84,24 +86,30 @@ st.markdown("""
         border: 1px solid #2E7D32;
     }
     
-    .highlight-tag {
-        background-color: #FF8C00;
-        color: #FFF;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: bold;
-        margin-left: 5px;
+    /* CORREÇÃO DO BOX DE COMPARAÇÃO */
+    .duelo-box {
+        background-color: #333; 
+        padding: 15px; 
+        border-radius: 10px; 
+        margin-bottom: 15px;
+        border: 1px solid #444;
     }
     
-    .comparison-bar {
+    .duelo-row {
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        margin-top: 5px;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
-    .bar-label { flex: 1; font-size: 14px; color: #CCC; }
-    .bar-value { flex: 1; text-align: right; font-weight: bold; color: #FFF; }
+    
+    .impacto-box {
+        background-color: #3d3e47;
+        padding: 10px;
+        border-radius: 8px;
+        text-align: center;
+        margin-top: 10px;
+        border: 1px solid #FF8C00;
+    }
     
     .streamlit-expanderContent {
         background-color: #262730;
@@ -162,7 +170,6 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         custo_energia_se_fosse_equatorial = consumo_para_compensar * tarifa_equatorial
         valor_locadora = consumo_para_compensar * tarifa_locadora_final
         
-        # Desconto em Reais para exibição
         desconto_em_reais_solee = custo_energia_se_fosse_equatorial - valor_locadora
         
         # Porcentagem de Impacto Real
@@ -218,43 +225,41 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         col_ant.metric("🔴 Pagaria Hoje", f"R$ {total_sem_gd:.2f}")
         col_dep.metric("🟢 Vai Pagar", f"R$ {custo_total_com_gd:.2f}")
 
-        # DETALHAMENTO (ATUALIZADO)
+        # DETALHAMENTO (LAYOUT CORRIGIDO)
         st.write("")
         with st.expander("🔎 Entenda os Valores (Raio-X)", expanded=False):
             
             st.markdown("#### 1. Duelo de Tarifas (Energia)")
             
+            # Box de Comparação Reestruturado
             st.markdown(f"""
-            <div style="background-color: #333; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
-                <p style="margin:0 0 10px 0; font-size:14px; color:#AAA;">Quanto custa essa energia ({consumo_para_compensar:.0f} kWh):</p>
+            <div class="duelo-box">
+                <p style="margin:0 0 10px 0; font-size:14px; color:#AAA;">Comparativo do custo da energia ({consumo_para_compensar:.0f} kWh):</p>
                 
-                <div class="comparison-bar" style="border-bottom: 1px solid #555; padding-bottom: 8px;">
-                    <span class="bar-label">🔴 Na Equatorial (Sem Solar)</span>
-                    <span class="bar-value" style="color: #FF5252;">R$ {custo_energia_se_fosse_equatorial:.2f}</span>
+                <div class="duelo-row" style="border-bottom: 1px solid #555; padding-bottom: 8px;">
+                    <span style="color: #FFF;">🔴 Na Equatorial</span>
+                    <span style="color: #FF5252; font-weight: bold;">R$ {custo_energia_se_fosse_equatorial:.2f}</span>
                 </div>
                 
-                <div class="comparison-bar" style="padding-top: 8px;">
-                    <span class="bar-label">🟢 Na Solee (Com Solar)</span>
-                    <span class="bar-value" style="color: #66BB6A;">R$ {valor_locadora:.2f}</span>
+                <div class="duelo-row" style="padding-top: 8px;">
+                    <span style="color: #FFF;">🟢 Na Solee</span>
+                    <span style="color: #66BB6A; font-weight: bold;">R$ {valor_locadora:.2f}</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
+            # Box de Impacto separado para não quebrar layout
             st.markdown(f"""
-            <div class="statement-row">
-                <span class="statement-label">⚡ Impacto Real (Desconto) <span class="highlight-tag">IMPACTO</span></span>
-                <span class="statement-value" style="color: #FF8C00;">{pct_desconto_efetivo:.1f}%</span>
+            <div class="impacto-box">
+                <span style="color: #FFF; font-size: 14px;">⚡ Desconto Efetivo na Energia: </span>
+                <br>
+                <span style="color: #FF8C00; font-size: 22px; font-weight: bold;">{pct_desconto_efetivo:.1f}%</span>
             </div>
             """, unsafe_allow_html=True)
 
-            # EXPLICAÇÃO DIDÁTICA
             st.info(f"""
-            **💡 Como esse desconto é possível?**
-            
-            A Equatorial cobra "tarifa cheia" (Energia + Fio B + Impostos). 
-            A Solee retira o custo do Fio B da conta dela e ainda aplica seu desconto de {desconto_pct}% em cima.
-            
-            Por isso, a sensação de desconto na parte da energia é muito maior (aprox. **{pct_desconto_efetivo:.0f}%**), fazendo valer a pena mesmo pagando as taxas obrigatórias separadamente.
+            **💡 Explicação para o Cliente:**
+            Embora o desconto no contrato seja de {desconto_pct}%, a **economia real** na compra da energia é muito maior ({pct_desconto_efetivo:.0f}%) porque a Solee retira custos (como o Fio B) que a Equatorial cobraria cheios.
             """)
 
             st.write("")
