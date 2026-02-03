@@ -263,13 +263,12 @@ if st.button("CALCULAR ECONOMIA 🚀"):
 """
             st.markdown(html_taxas, unsafe_allow_html=True)
             
-            st.write("")
+         st.write("")
             st.info(f"""
-            **💡 Resumo do Benefício:**
-            Você troca uma energia cara (R$ {tarifa_equatorial:.3f}) por uma energia barata (R$ {tarifa_locadora_final:.3f}). 
-            Mesmo pagando as taxas separadas, a conta final fecha no azul com economia garantida.
+            **💡 Como esse desconto é possível?**
+            A Solee retira custos (como o Fio B) que a Equatorial cobraria cheios, e ainda aplica o desconto de contrato ({desconto_pct}%) sobre a tarifa reduzida.
             """)
 
         # RODAPÉ
         st.write("")
-        st.caption(f"ℹ️ Cálculos baseados na Tarifa Equatorial de R$ {tarifa_equatorial:.3f}. Os valores são aproximados e dependem das taxas de disponibilidade e iluminação pública.")
+        st.info(f"ℹ️ Cálculos baseados na Tarifa Equatorial de R$ {tarifa_equatorial:.3f}. Os valores aproximados e condicionados ao tipo de sistema e taxas de disponibilidade e iluminação pública.")
