@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILO CSS (OTIMIZADO PARA MODO ESCURO / DARK MODE) ---
+# --- ESTILO CSS (OTIMIZADO PARA MODO ESCURO) ---
 st.markdown("""
     <style>
     .block-container {
@@ -94,6 +94,15 @@ st.markdown("""
         margin-left: 5px;
     }
     
+    .comparison-bar {
+        display: flex;
+        align-items: center;
+        margin-top: 5px;
+        margin-bottom: 10px;
+    }
+    .bar-label { flex: 1; font-size: 14px; color: #CCC; }
+    .bar-value { flex: 1; text-align: right; font-weight: bold; color: #FFF; }
+    
     .streamlit-expanderContent {
         background-color: #262730;
         color: white;
@@ -149,23 +158,25 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         tarifa_base_locadora = tarifa_equatorial - tarifa_fio_b_nominal
         tarifa_locadora_final = tarifa_base_locadora * (1 - (desconto_pct / 100))
         
-        # Valores para comparação
-        valor_bruto_energia_locadora = consumo_para_compensar * tarifa_base_locadora
-        valor_locadora = consumo_para_compensar * tarifa_locadora_final
-        desconto_em_reais_solee = valor_bruto_energia_locadora - valor_locadora
-        
-        # CÁLCULO DA PORCENTAGEM EFETIVA DE DESCONTO (O "33%")
-        # Comparando o que pagaria na Equatorial CHEIA vs o que paga na Solee pela mesma energia
+        # Valores Comparativos
         custo_energia_se_fosse_equatorial = consumo_para_compensar * tarifa_equatorial
+        valor_locadora = consumo_para_compensar * tarifa_locadora_final
+        
+        # Desconto em Reais para exibição
+        desconto_em_reais_solee = custo_energia_se_fosse_equatorial - valor_locadora
+        
+        # Porcentagem de Impacto Real
         if custo_energia_se_fosse_equatorial > 0:
             pct_desconto_efetivo = ((custo_energia_se_fosse_equatorial - valor_locadora) / custo_energia_se_fosse_equatorial) * 100
         else:
             pct_desconto_efetivo = 0
 
+        # Taxas Equatorial
         valor_disponibilidade = custo_disponibilidade * tarifa_equatorial
         custo_fio_b_efetivo = consumo_para_compensar * fator_custo_fio_b
         total_fatura_equatorial = valor_disponibilidade + valor_ilum_pub + custo_fio_b_efetivo
 
+        # Totais Finais
         custo_total_com_gd = valor_locadora + total_fatura_equatorial
         economia_reais = total_sem_gd - custo_total_com_gd
         economia_anual = economia_reais * 12
@@ -203,44 +214,48 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         </div>
         """, unsafe_allow_html=True)
 
-        # COMPARATIVO
         col_ant, col_dep = st.columns(2)
         col_ant.metric("🔴 Pagaria Hoje", f"R$ {total_sem_gd:.2f}")
         col_dep.metric("🟢 Vai Pagar", f"R$ {custo_total_com_gd:.2f}")
 
-        # DETALHAMENTO (ATUALIZADO COM O DESCONTO EFETIVO)
+        # DETALHAMENTO (ATUALIZADO)
         st.write("")
         with st.expander("🔎 Entenda os Valores (Raio-X)", expanded=False):
             
-            st.markdown("#### 1. Onde você ganha (Energia)")
+            st.markdown("#### 1. Duelo de Tarifas (Energia)")
             
-            # Nova linha mostrando o percentual efetivo
             st.markdown(f"""
-            <div class="statement-row">
-                <span class="statement-label">Desconto Nominal (Contrato)</span>
-                <span class="statement-value">{desconto_pct:.1f}%</span>
-            </div>
-            <div class="statement-row">
-                <span class="statement-label">⚡ Desconto Real na Energia <span class="highlight-tag">IMPACTO REAL</span></span>
-                <span class="statement-value" style="color: #FF8C00;">{pct_desconto_efetivo:.1f}%</span>
-            </div>
-            <div style="font-size: 12px; color: #888; margin-bottom: 10px; margin-top: -5px;">
-                *Comparando o preço da Solee vs Equatorial nesta parcela de consumo.
-            </div>
-            
-            <div class="statement-row">
-                <span class="statement-label">Preço Normal da Energia</span>
-                <span class="statement-value" style="color: #888; text-decoration: line-through;">R$ {valor_bruto_energia_locadora:.2f}</span>
-            </div>
-            <div class="statement-row">
-                <span class="statement-label">✅ Economia em Dinheiro</span>
-                <span class="discount-tag">- R$ {desconto_em_reais_solee:.2f}</span>
-            </div>
-            <div class="statement-row" style="background-color: #333; padding: 5px 10px; border-radius: 5px; margin-top: 5px;">
-                <span class="statement-label" style="font-weight:bold; color: #FFF;">= Energia com Desconto</span>
-                <span class="statement-value" style="color: #66BB6A;">R$ {valor_locadora:.2f}</span>
+            <div style="background-color: #333; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                <p style="margin:0 0 10px 0; font-size:14px; color:#AAA;">Quanto custa essa energia ({consumo_para_compensar:.0f} kWh):</p>
+                
+                <div class="comparison-bar" style="border-bottom: 1px solid #555; padding-bottom: 8px;">
+                    <span class="bar-label">🔴 Na Equatorial (Sem Solar)</span>
+                    <span class="bar-value" style="color: #FF5252;">R$ {custo_energia_se_fosse_equatorial:.2f}</span>
+                </div>
+                
+                <div class="comparison-bar" style="padding-top: 8px;">
+                    <span class="bar-label">🟢 Na Solee (Com Solar)</span>
+                    <span class="bar-value" style="color: #66BB6A;">R$ {valor_locadora:.2f}</span>
+                </div>
             </div>
             """, unsafe_allow_html=True)
+
+            st.markdown(f"""
+            <div class="statement-row">
+                <span class="statement-label">⚡ Impacto Real (Desconto) <span class="highlight-tag">IMPACTO</span></span>
+                <span class="statement-value" style="color: #FF8C00;">{pct_desconto_efetivo:.1f}%</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # EXPLICAÇÃO DIDÁTICA
+            st.info(f"""
+            **💡 Como esse desconto é possível?**
+            
+            A Equatorial cobra "tarifa cheia" (Energia + Fio B + Impostos). 
+            A Solee retira o custo do Fio B da conta dela e ainda aplica seu desconto de {desconto_pct}% em cima.
+            
+            Por isso, a sensação de desconto na parte da energia é muito maior (aprox. **{pct_desconto_efetivo:.0f}%**), fazendo valer a pena mesmo pagando as taxas obrigatórias separadamente.
+            """)
 
             st.write("")
             st.markdown("#### 2. O que é Obrigatório (Taxas)")
