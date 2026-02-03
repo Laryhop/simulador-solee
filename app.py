@@ -69,9 +69,6 @@ st.markdown("""
     .result-box h1, .result-box h4, .result-box p {
         color: white !important;
     }
-    .annual-box span {
-        /* As cores dos spans são definidas inline no HTML */
-    }
     
     /* TAGS E DESTAQUES */
     .discount-tag { 
@@ -84,23 +81,20 @@ st.markdown("""
         border: 1px solid #2E7D32;
     }
 
-    /* ESTILO DO EXPANDER (Ajusta-se ao tema do usuário, mas forçamos contraste nos boxes internos) */
+    /* ESTILO DO EXPANDER (Ajusta-se ao tema do usuário) */
     .streamlit-expanderContent {
-        /* Deixa transparente para herdar o fundo do tema (branco ou preto) */
+        /* Deixa transparente para herdar o fundo do tema */
     }
     
-    /* Classe para linhas do extrato que funciona em ambos os modos */
+    /* Classe para linhas do extrato */
     .statement-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 12px 0;
-        border-bottom: 1px solid #ddd; /* Cinza claro genérico */
+        border-bottom: 1px solid #ddd;
         font-size: 16px;
     }
-    
-    /* No modo claro, o texto default é preto. No escuro, é branco. 
-       Não forçamos cor aqui para não quebrar. */
     
     </style>
 """, unsafe_allow_html=True)
@@ -204,18 +198,18 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         </div>
         """, unsafe_allow_html=True)
 
-        # 3. COMPARATIVO (Métricas Nativas do Streamlit adaptam-se sozinhas)
+        # 3. COMPARATIVO (Métricas Nativas)
         col_ant, col_dep = st.columns(2)
         col_ant.metric("🔴 Pagaria Hoje", f"R$ {total_sem_gd:.2f}")
         col_dep.metric("🟢 Vai Pagar", f"R$ {custo_total_com_gd:.2f}")
 
-        # 4. DETALHAMENTO (BOXES DESTAQUE SÃO ESCUROS, TEXTO COMUM ADAPTA)
+        # 4. DETALHAMENTO
         st.write("")
         with st.expander("🔎 Entenda os Valores (Raio-X)", expanded=False):
             
             st.markdown("#### 1. Duelo de Tarifas (Energia)")
             
-            # Box Escuro Fixo para Comparação (Garante contraste das cores verde/vermelho)
+            # Box Escuro Fixo para Comparação
             html_duelo = f"""
 <div style="background-color: #333; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #444;">
     <p style="margin:0 0 10px 0; font-size:14px; color:#AAA;">Comparativo do custo da energia ({consumo_para_compensar:.0f} kWh):</p>
@@ -244,9 +238,7 @@ if st.button("CALCULAR ECONOMIA 🚀"):
             st.write("")
             st.markdown("#### 2. O que é Obrigatório (Taxas)")
             
-            # Aqui usamos divs simples para a lista. No modo claro, precisamos garantir que o texto apareça.
-            # Usei style='color: var(--text-color)' para adaptar.
-            
+            # Lista de Taxas
             html_taxas = f"""
 <div style="border-bottom: 1px solid #ddd; padding: 10px 0; display: flex; justify-content: space-between;">
     <span style="font-weight: 500;">Mínimo Equatorial + Fio B</span>
@@ -261,7 +253,7 @@ if st.button("CALCULAR ECONOMIA 🚀"):
     <span style="font-weight: bold; color: #EF5350;">R$ {total_fatura_equatorial:.2f}</span>
 </div>
 """
-           st.markdown(html_taxas, unsafe_allow_html=True)
+            st.markdown(html_taxas, unsafe_allow_html=True)
             
             st.write("")
             st.info(f"""
