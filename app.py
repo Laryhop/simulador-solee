@@ -10,20 +10,20 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILO CSS (CORREÇÃO DE LOGO + LAYOUT) ---
+# --- ESTILO CSS ---
 st.markdown("""
     <style>
-    /* 1. Aumentar margem do topo para a logo não cortar */
+    /* 1. Ajuste de margem topo (Logo) */
     .block-container {
-        padding-top: 4rem !important; /* Mais espaço no topo */
+        padding-top: 4rem !important; 
         padding-bottom: 5rem;
     }
     
-    /* 2. Remover elementos padrão */
+    /* 2. Remover menu padrão */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     
-    /* 3. Botão Grande e Chamativo */
+    /* 3. Botão Principal */
     div.stButton > button {
         background-color: #FF8C00;
         color: white;
@@ -41,11 +41,11 @@ st.markdown("""
         transform: translateY(-2px);
     }
     
-    /* 4. Títulos e Texto Mobile */
+    /* 4. Textos Mobile */
     h1 { font-size: 1.8rem !important; }
     h3 { font-size: 1.3rem !important; }
     
-    /* 5. Card de Resultado Fixo */
+    /* 5. Caixa de Resultado */
     .result-box {
         background-color: #e8f5e9;
         padding: 20px;
@@ -63,7 +63,6 @@ col_logo, col_title = st.columns([1, 4])
 
 with col_logo:
     try:
-        # width=80 garante que ela apareça inteira sem cortar
         st.image("logo.png", width=80) 
     except:
         st.write("☀️")
@@ -102,7 +101,6 @@ st.write("")
 # --- CÁLCULO ---
 if st.button("CALCULAR ECONOMIA 🚀"):
     
-    # Validação
     if consumo_medio is None or valor_ilum_pub is None or desconto_pct is None:
         st.error("⚠️ Por favor, preencha todos os campos para calcular.")
     else:
@@ -123,7 +121,10 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         tarifa_base_locadora = tarifa_equatorial - tarifa_fio_b_nominal
         tarifa_locadora_final = tarifa_base_locadora * (1 - (desconto_pct / 100))
         valor_locadora = consumo_para_compensar * tarifa_locadora_final
-
+        
+        # Cálculos de desconto unitário para exibição
+        valor_desconto_por_kwh = tarifa_base_locadora - tarifa_locadora_final
+        
         # Equatorial
         valor_disponibilidade = custo_disponibilidade * tarifa_equatorial
         custo_fio_b_efetivo = consumo_para_compensar * fator_custo_fio_b
@@ -133,9 +134,11 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         custo_total_com_gd = valor_locadora + total_fatura_equatorial
         economia_reais = total_sem_gd - custo_total_com_gd
         economia_pct = (economia_reais / total_sem_gd) * 100 if total_sem_gd > 0 else 0
+        
+        # Economia focada apenas na energia (removendo ilum publica da conta)
+        economia_pct_energia = (economia_reais / custo_energia_sem_gd) * 100 if custo_energia_sem_gd > 0 else 0
 
-        # --- AUTO-SCROLL (SCRIPT PARA DESCER A TELA) ---
-        # Isso força o navegador a descer até o fim da página onde está o resultado
+        # --- AUTO-SCROLL ---
         components.html(
             """
             <script>
@@ -149,23 +152,21 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         st.write("---")
         st.markdown("<h3 style='text-align: center; color: #2E7D32;'>🎉 Resultado da Análise</h3>", unsafe_allow_html=True)
 
-        # Card de destaque
+        # Card de Destaque
         st.markdown(f"""
         <div class="result-box">
             <p style="margin:0; font-size: 16px; color: #555;">Economia Mensal Garantida</p>
             <h2 style="margin:5px 0; color: #2E7D32; font-size: 36px;">R$ {economia_reais:.2f}</h2>
             <p style="margin:0; font-weight: bold; color: #2E7D32; background-color: #fff; display: inline-block; padding: 2px 10px; border-radius: 10px;">
-                📉 Redução de {economia_pct:.1f}%
+                📉 Redução de {economia_pct:.1f}% na fatura
             </p>
         </div>
         """, unsafe_allow_html=True)
 
-        # Comparativo Simplificado
         col1, col2 = st.columns(2)
         col1.metric("🔴 Paga Hoje", f"R$ {total_sem_gd:.2f}")
         col2.metric("🟢 Com Solee", f"R$ {custo_total_com_gd:.2f}")
 
-        # Gráfico Visual
         chart_data = pd.DataFrame({
             "Cenário": ["Atual", "Com Solee"],
             "Custo (R$)": [total_sem_gd, custo_total_com_gd]
@@ -174,24 +175,26 @@ if st.button("CALCULAR ECONOMIA 🚀"):
 
         # --- MEMÓRIA DE CÁLCULO DETALHADA ---
         st.write("")
-        with st.expander("🔎 Ver Memória de Cálculo Detalhada (Explicação)"):
+        with st.expander("🔎 Ver Memória de Cálculo Detalhada"):
             st.markdown(f"""
-            **1. Divisão do Consumo ({consumo_medio:.0f} kWh):**
-            * **{custo_disponibilidade} kWh** ficam na Equatorial (Custo de Disponibilidade Obrigatório).
-            * **{consumo_para_compensar:.0f} kWh** são injetados pela Solee (Energia Solar).
-
+            **1. Análise dos Descontos:**
+            * Desconto ofertado no kWh: **{desconto_pct:.1f}%**
+            * **Desconto Financeiro no kWh:** O cliente paga **R$ {valor_desconto_por_kwh:.4f} a menos** por cada kWh compensado.
+            * **Economia Real na Energia:** Se desconsiderarmos a Iluminação Pública, o cliente está economizando **{economia_pct_energia:.1f}%** puramente no consumo de energia.
+            
             ---
             
             **2. Composição da Nova Conta:**
             
-            **A) Pagamento Equatorial (R$ {total_fatura_equatorial:.2f})**
-            * Disponibilidade ({custo_disponibilidade} kWh x {tarifa_equatorial:.3f}): R$ {valor_disponibilidade:.2f}
-            * Iluminação Pública: R$ {valor_ilum_pub:.2f}
-            * Uso do Fio B (Taxa da rede sobre a energia solar): R$ {custo_fio_b_efetivo:.2f}
+            **A) Boleto Solee (R$ {valor_locadora:.2f})**
+            * Energia Solar ({consumo_para_compensar:.0f} kWh).
+            * Tarifa Normal (Base): R$ {tarifa_base_locadora:.4f}
+            * **Tarifa Solee (Com Desconto): R$ {tarifa_locadora_final:.4f}**
             
-            **B) Boleto Solee (R$ {valor_locadora:.2f})**
-            * Energia Solar ({consumo_para_compensar:.0f} kWh): 
-            * *Tarifa aplicada com desconto:* R$ {tarifa_locadora_final:.4f}/kWh
+            **B) Pagamento Equatorial (R$ {total_fatura_equatorial:.2f})**
+            * Disponibilidade ({custo_disponibilidade} kWh): R$ {valor_disponibilidade:.2f}
+            * Taxa Fio B: R$ {custo_fio_b_efetivo:.2f}
+            * Ilum. Pública: R$ {valor_ilum_pub:.2f}
             
             **Total (A + B) = R$ {custo_total_com_gd:.2f}**
             """)
