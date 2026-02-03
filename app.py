@@ -32,7 +32,7 @@ st.markdown("""
         border: none;
         padding: 15px 24px;
         width: 100%;
-        box-shadow: 0px 4px 6px rgba(0,0,0,0.3); /* Sombra mais escura */
+        box-shadow: 0px 4px 6px rgba(0,0,0,0.3);
         transition: 0.3s;
     }
     div.stButton > button:hover {
@@ -40,16 +40,27 @@ st.markdown("""
         transform: translateY(-2px);
     }
     
-    /* Box de Resultado - Fundo Escuro para Contraste */
+    /* Box de Resultado Principal */
     .result-box {
-        background-color: #262730; /* Cinza Chumbo (Padrão Streamlit Dark) */
+        background-color: #262730; 
         padding: 20px;
         border-radius: 15px;
-        border: 1px solid #444; /* Borda sutil */
+        border: 1px solid #444; 
         border-left: 8px solid #2E7D32;
         box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         text-align: center;
         margin-bottom: 25px;
+    }
+    
+    /* Box de Economia Anual (Novo) */
+    .annual-box {
+        background-color: #1E1E1E;
+        border: 1px solid #FF8C00;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+        margin-top: 10px;
+        margin-bottom: 20px;
     }
     
     /* Textos Gerais */
@@ -63,16 +74,16 @@ st.markdown("""
         justify-content: space-between;
         align-items: center;
         padding: 12px 0;
-        border-bottom: 1px solid #444; /* Linha divisória cinza escura */
+        border-bottom: 1px solid #444; 
         font-size: 16px;
     }
-    .statement-label { color: #E0E0E0; font-weight: 500; } /* Texto claro */
-    .statement-value { font-weight: bold; color: #FFFFFF; } /* Branco Puro */
+    .statement-label { color: #E0E0E0; font-weight: 500; }
+    .statement-value { font-weight: bold; color: #FFFFFF; }
     
     /* Etiqueta de Desconto */
     .discount-tag { 
-        background-color: #1B5E20; /* Verde Escuro Fundo */
-        color: #A5D6A7; /* Verde Claro Texto */
+        background-color: #1B5E20; 
+        color: #A5D6A7; 
         padding: 4px 8px; 
         border-radius: 6px; 
         font-size: 13px; 
@@ -146,6 +157,7 @@ if st.button("CALCULAR ECONOMIA 🚀"):
 
         custo_total_com_gd = valor_locadora + total_fatura_equatorial
         economia_reais = total_sem_gd - custo_total_com_gd
+        economia_anual = economia_reais * 12  # CÁLCULO ANUAL
         economia_pct = (economia_reais / total_sem_gd) * 100 if total_sem_gd > 0 else 0
         
         # Percentuais
@@ -167,23 +179,32 @@ if st.button("CALCULAR ECONOMIA 🚀"):
         st.write("---")
         st.markdown("<h3 style='text-align: center;'>Resultado da Análise</h3>", unsafe_allow_html=True)
 
-        # 1. CARD PRINCIPAL (MODO ESCURO)
+        # 1. CARD MENSAL
         st.markdown(f"""
         <div class="result-box">
             <h4 style="margin:0; color: #BBB; font-weight: normal;">Economia Mensal</h4>
             <h1 style="margin: 5px 0; color: #4CAF50; font-size: 42px;">R$ {economia_reais:.2f}</h1>
-            <p style="margin:0; font-size: 16px; color: #EEE;">📉 Redução de <b>{economia_pct:.1f}%</b> na conta total</p>
+            <p style="margin:0; font-size: 16px; color: #EEE;">📉 Redução de <b>{economia_pct:.1f}%</b> na conta</p>
         </div>
         """, unsafe_allow_html=True)
 
-        # 2. COMPARATIVO
+        # 2. CARD ANUAL (NOVO)
+        st.markdown(f"""
+        <div class="annual-box">
+            <span style="color: #FF8C00; font-weight: bold; font-size: 14px;">PROJEÇÃO DE 1 ANO</span><br>
+            <span style="color: #FFF; font-size: 24px; font-weight: bold;">R$ {economia_anual:.2f}</span><br>
+            <span style="color: #888; font-size: 12px;">economizados em 12 meses</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # 3. COMPARATIVO
         col_ant, col_dep = st.columns(2)
         col_ant.metric("🔴 Pagaria Hoje", f"R$ {total_sem_gd:.2f}")
         col_dep.metric("🟢 Vai Pagar", f"R$ {custo_total_com_gd:.2f}")
 
-        # 3. DETALHAMENTO (AJUSTADO PARA FUNDO ESCURO)
+        # 4. DETALHAMENTO
         st.write("")
-        with st.expander("🔎 Entenda os Valores (Raio-X)", expanded=True):
+        with st.expander("🔎 Entenda os Valores (Raio-X)", expanded=False):
             
             st.markdown("#### 1. Onde você ganha (Energia)")
             st.markdown(f"""
@@ -218,13 +239,6 @@ if st.button("CALCULAR ECONOMIA 🚀"):
             </div>
             """, unsafe_allow_html=True)
 
-            st.write("")
-            st.info(f"""
-            **Resumo da nova fatura (R$ {custo_total_com_gd:.2f}):**
-            * ⚡ **{pct_energia:.0f}%** é Energia (Com desconto).
-            * 🏛️ **{pct_taxas:.0f}%** são Taxas Obrigatórias.
-            """)
-        
-        # --- INFORMAÇÃO FINAL DE RODAPÉ ---
+        # --- INFORMAÇÃO FINAL DE RODAPÉ (ATUALIZADA) ---
         st.write("")
-        st.info(f"ℹ️ Cálculos baseados na Tarifa Equatorial de R$ {tarifa_equatorial:.3f}")
+        st.info(f"ℹ️ Cálculos baseados na Tarifa Equatorial de R$ {tarifa_equatorial:.3f}. Os valores aproximados e condicionados ao tipo de sistema e taxas de disponibilidade e iluminação pública.")
