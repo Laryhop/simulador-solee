@@ -110,23 +110,24 @@ st.markdown("### 📝 Dados da Fatura")
 
 consumo_medio = st.number_input("1️⃣ Consumo Médio (kWh)", min_value=0.0, value=None, placeholder="Ex: 480")
 valor_ilum_pub = st.number_input("2️⃣ Ilum. Pública (R$)", min_value=0.0, value=None, placeholder="Ex: 48.00", format="%.2f")
+preco_kwh = st.number_input("3️⃣ Preço do kWh (R$)", min_value=0.0, value=None, placeholder="Ex: 1.077", format="%.3f")
 
 col_tipo, col_desc = st.columns(2)
 with col_tipo:
-    tipo_ligacao = st.selectbox("3️⃣ Ligação", ["Monofásico", "Trifásico"], index=1)
+    tipo_ligacao = st.selectbox("4️⃣ Ligação", ["Monofásico", "Trifásico"], index=1)
 with col_desc:
-    desconto_pct = st.number_input("4️⃣ Desconto (%)", min_value=0.0, max_value=100.0, value=None, placeholder="Ex: 15")
+    desconto_pct = st.number_input("5️⃣ Desconto (%)", min_value=0.0, max_value=100.0, value=None, placeholder="Ex: 15")
 
 st.write("") 
 
 # --- CÁLCULO ---
 if st.button("CALCULAR ECONOMIA 🚀"):
     
-    if consumo_medio is None or valor_ilum_pub is None or desconto_pct is None:
+    if consumo_medio is None or valor_ilum_pub is None or preco_kwh is None or desconto_pct is None:
         st.error("⚠️ Por favor, preencha todos os campos.")
     else:
         # LÓGICA
-        tarifa_equatorial = 1.077
+        tarifa_equatorial = preco_kwh
         tarifa_fio_b_nominal = 0.224272
         fator_custo_fio_b = 0.15065 
         custo_disponibilidade = 100 if tipo_ligacao == "Trifásico" else 30
